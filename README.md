@@ -126,6 +126,104 @@ Abra en el navegador:
 
 Para detener el servidor, presione `Ctrl+C` en PowerShell.
 
+## Instalación en GNU/Linux
+
+### 1. Requisitos
+
+Antes de comenzar, instale:
+
+- Python 3.12.
+- MySQL 8 o una versión compatible.
+- Git.
+
+Compruebe las instalaciones desde PowerShell:
+
+```sh
+python3 --version
+mysql --version
+git --version
+```
+
+### 2. Descargar el Sistema de Encuesta de Salud
+
+```sh
+git clone https://github.com/jceronch1/encuesta-salud.git && cd encuesta-salud
+```
+
+### 3. Crear el entorno de Python
+
+```sh
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.web.txt
+```
+
+El entorno `.venv` mantiene las dependencias del sistema separadas de las demás aplicaciones instaladas en el equipo.
+
+### 4. Preparar MySQL
+
+La aplicación necesita una base llamada `encuesta-salud`. Si todavía no existe, créela desde el cliente de MySQL con una cuenta administrativa:
+
+```sql
+CREATE DATABASE `encuesta-salud`
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+```
+
+Use una cuenta exclusiva para la aplicación. En este proyecto el usuario previsto es `sigendin`; su contraseña debe mantenerse únicamente en el archivo local `.env` y nunca debe publicarse en GitHub.
+
+### 5. Configurar la conexión
+
+Copie el archivo de ejemplo:
+
+```sh
+mv .env.example .env
+```
+
+Abra `.env` y complete los datos locales:
+
+```dotenv
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=sigendin
+DB_PASSWORD=SU_CONTRASENA_LOCAL
+DB_NAME=encuesta-salud
+
+APP_HOST=127.0.0.1
+APP_PORT=8000
+UPLOAD_DIR=data/uploads
+MAX_FILE_SIZE_MB=50
+MAX_BATCH_FILES=250
+PROCESSING_WORKERS=2
+```
+
+El archivo `.env` está excluido de Git para proteger la contraseña.
+
+### 6. Crear las tablas
+
+Ejecute una sola vez el inicializador con una cuenta MySQL que tenga permiso para crear tablas. Sustituya `ADMIN`, `CLAVE` y, si es necesario, el servidor:
+
+```sh
+export DATABASE_ADMIN_URL="mysql+pymysql://ADMIN:CLAVE@127.0.0.1:3306/encuesta-salud?charset=utf8mb4"
+./.venv/bin/python scripts/bootstrap_database.py
+unset DATABASE_ADMIN_URL
+```
+
+Después de crear las tablas, el usuario de la aplicación solo necesita permisos `SELECT`, `INSERT`, `UPDATE` y `DELETE` sobre la base `encuesta-salud`.
+
+### 7. Iniciar la aplicación
+
+```sh
+sudo chmod u+x start-web.sh
+./start-web.sh
+```
+
+Abra en el navegador:
+
+- Aplicación: <http://127.0.0.1:8000>
+- Documentación de la API: <http://127.0.0.1:8000/api/docs>
+
+Para detener el servidor, presione `Ctrl+C` en PowerShell.
+
 ## Uso básico
 
 1. Abra la aplicación en el navegador.
